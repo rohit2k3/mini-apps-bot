@@ -8,7 +8,8 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  loopCallFunction()
+  res.send("Bot is working and mining started");
 });
 
 app.listen(port, () => {
@@ -65,7 +66,6 @@ const loopCallFunction = async () => {
       const url = "https://gm.pocketfi.org/mining/createUserMining";
       try {
         const getData = await axios.post(url, "", { headers: headers });
-        console.log(getData.data);
       } catch (error) {
         return error.message;
       }
@@ -75,7 +75,6 @@ const loopCallFunction = async () => {
       const url = "https://gm.pocketfi.org/mining/claimMining";
       try {
         const getData = await axios.post(url, "", { headers: headers });
-        console.log(getData.data);
       } catch (error) {
         return error.message;
       }
@@ -107,18 +106,15 @@ const loopCallFunction = async () => {
         const getData = await axios.post(url, bodyData, {
           headers: headerBoost2,
         });
-        console.log(getData.data);
       } catch (error) {
         return error.message;
       }
-      console.log("subscribe claim " + platform);
     }
 
     async function dailyBoost() {
       const url = "https://rubot.pocketfi.org/boost/activateDailyBoost";
       try {
         const getData = await axios.post(url, "", { headers: headerBoost });
-        console.log(getData.data);
       } catch (error) {
         return error.message;
       }
@@ -138,7 +134,6 @@ const loopCallFunction = async () => {
 // Function to add data to the users.json file
 
 function addDataInFile(data) {
-  console.log("i am caleled");
   const dataFile = fs.readFileSync("users.json", "utf8");
   let dataFileJson = [];
   if (dataFile) {
@@ -193,7 +188,6 @@ async function getAllBalance() {
         miningAmount: miningAmount,
         accountID: i + 1,
       };
-      console.log(res);
       resArray.push(res);
     } catch (error) {
       console.log(`Error for user ${i + 1}: ${error.message}`);
@@ -225,7 +219,6 @@ bot.command("pocketadd", async (ctx) => {
 
 bot.command("pocketfibalance", async (ctx) => {
   const allBalance = await getAllBalance();
-  console.log(allBalance);
   allBalance.map((data) => {
     ctx.reply(
       "Total Balance: " +
