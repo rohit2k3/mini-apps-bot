@@ -212,7 +212,6 @@ async function bananaAppTG() {
             const headers = await loginMethod(user);
 
             let profile = await profileCall(headers);
-            console.log(profile);
 
 
             if (profile && profile.data) {
@@ -221,14 +220,12 @@ async function bananaAppTG() {
 
                 for (let i = 0; i < totalClick - countClick; i += 10) {
                     const daata = await doClick(headers);
-                    console.log(daata);
 
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 }
 
                 if (profile.data.lottery_info && profile.data.lottery_info.countdown_end) {
                     const claimData = await claimBanana(headers);
-                    console.log(claimData);
                     profile = await profileCall(headers);
                 }
                 // if (profile.data.lottery_info && profile.data.lottery_info.remain_lottery_count > 0) {
@@ -239,7 +236,6 @@ async function bananaAppTG() {
                 const speedCount = profile.data.speedup_count;
                 for (let i = 1; i <= speedCount; i++) {
                     const speedData = await booster(headers);
-                    console.log(speedData);
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             } else {
@@ -388,7 +384,7 @@ bot.command("pocketfistart", async (ctx) => {
 
 bot.command("bananastart", async (ctx) => {
   const totalUsers = await bananaAppTG();
-  ctx.reply(totalUsers);
+  ctx.reply(JSON.stringify(totalUsers));
 });
 
 bot.launch();
