@@ -9,6 +9,7 @@ const port = process.env.PORT || 3000;
 
 app.get("/", (req, res) => {
   loopCallFunction()
+  bananaAppTG()
   res.send("Bot is working and mining started");
 });
 
@@ -197,13 +198,157 @@ async function getAllBalance() {
   return resArray;
 }
 
+//banana app tg start
+const bananaUsers = require("./bananaUsers.json");
+async function bananaAppTG() {
+    try {
+
+        var totalUsers = 0;
+        var totalUsernames = [];
+
+        for (let i = 0; i < bananaUsers.length; i++) {
+            const user = bananaUsers[i];
+
+            const headers = await loginMethod(user);
+
+            let profile = await profileCall(headers);
+            console.log(profile);
+
+
+            if (profile && profile.data) {
+                const countClick = profile.data.today_click_count;
+                const totalClick = profile.data.max_click_count;
+
+                for (let i = 0; i < totalClick - countClick; i += 10) {
+                    const daata = await doClick(headers);
+                    console.log(daata);
+
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+
+                if (profile.data.lottery_info && profile.data.lottery_info.countdown_end) {
+                    const claimData = await claimBanana(headers);
+                    console.log(claimData);
+                    profile = await profileCall(headers);
+                }
+                // if (profile.data.lottery_info && profile.data.lottery_info.remain_lottery_count > 0) {
+                //     const claimData = await harvestBanana(headers);
+                //     console.log(claimData);
+                //     profile = await profileCall(headers);
+                // }
+                const speedCount = profile.data.speedup_count;
+                for (let i = 1; i <= speedCount; i++) {
+                    const speedData = await booster(headers);
+                    console.log(speedData);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            } else {
+                console.error('Profile data is undefined or not in the expected format');
+            }
+            totalUsernames.push(profile.data.username);
+            totalUsers++;
+        }
+        return {totalUser: totalUsers, totalUsernames };
+
+    } catch (error) {
+        console.error('Error in main:', error);
+    }
+}
+
+async function claimBanana(headers) {
+    try {
+        const url = "https://interface.carv.io/banana/claim_lottery";
+        const response = await axios.post(url, { "claimLotteryType": 1 }, { headers });
+        return response.data;
+    } catch (error) {
+        console.error('Error in claimBanana:', error);
+        return null; // Or return an error object/message if you prefer
+    }
+}
+
+async function booster(headers) {
+    try {
+        const url = "https://interface.carv.io/banana/do_speedup";
+        const response = await axios.post(url, {}, { headers });
+        return response.data;
+    } catch (error) {
+        console.error('Error in booster:', error);
+        return null;
+    }
+}
+
+async function harvestBanana(headers) {
+    try {
+        const url = "https://interface.cloudflare.carv.io/banana/do_lottery";
+        const response = await axios.post(url, {}, { headers });
+        return response.data;
+    } catch (error) {
+        console.error('Error in harvestBanana:', error);
+        return null;
+    }
+}
+
+async function profileCall(headers) {
+    try {
+        const url = "https://interface.carv.io/banana/get_user_info";
+        const response = await axios.get(url, { headers });
+        return response.data;
+    } catch (error) {
+        console.error('Error in profileCall:', error);
+        return null;
+    }
+}
+
+async function doClick(headers) {
+    try {
+        const url = "https://interface.carv.io/banana/do_click";
+        const response = await axios.post(url, {
+            "clickCount": 10
+        }, { headers });
+        return response.data;
+    } catch (error) {
+        console.error('Error in doClick:', error);
+        return null;
+    }
+}
+
+
+async function loginMethod(bodyData) {
+    const url = "https://interface.carv.io/banana/login";
+    let headers = {
+        "Reqable-Id": "",
+        "Host": "interface.carv.io",
+        "User-Agent": "Mozilla/5.0 (Linux; Android 7.1.2; K) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/93.0.4577.82 Mobile Safari/537.36",
+        "Connection": "keep-alive",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Encoding": "gzip, deflate",
+        "Content-Type": "application/json",
+        "x-app-id": "carv",
+        "Authorization": "Bearer",
+        "Origin": "https://bananagame.xyz",
+        "X-Requested-With": "org.telegram.messenger",
+        "Sec-Fetch-Site": "cross-site",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Dest": "empty",
+        "Referer": "https://bananagame.xyz/",
+        "Accept-Language": "en,en-IN;q=0.9,en-US;q=0.8"
+    };
+
+    const response = await axios.post(url, bodyData, { headers });
+    headers.Authorization = `Bearer ${response.data.data.token}`;
+
+    return headers;
+}
+
+//banana app tg end
+
 // Initialize the Telegraf bot
 const bot = new Telegraf("7239520264:AAGSPM2vCFo1AsfruK_X7Gic2Mo8MtEbkok");
 
 bot.start((ctx) => ctx.reply("Welcome " + ctx.from.first_name));
 bot.help((ctx) =>
   ctx.reply(
-    "PocketFi Details \n /pocketfibalance - Get all balance \n /pocketfistart - Start mining for all users \n /pocketadd - Add data to server \nPocketfi start mining in every 4 hour or within 4 hours"
+    "PocketFi Details \n /pocketfibalance - Get all balance \n /bananastart - Start mining for all banana app \n /pocketfistart - Start mining for all users \n /pocketadd - Add data to server \nPocketfi start mining in every 4 hour or within 4 hours"
   )
 );
 
@@ -233,9 +378,17 @@ bot.command("pocketfibalance", async (ctx) => {
   });
 });
 
+
+
+
 bot.command("pocketfistart", async (ctx) => {
   const totalUsers = await loopCallFunction();
   ctx.reply("Total Users: " + totalUsers);
+});
+
+bot.command("bananastart", async (ctx) => {
+  const totalUsers = await bananaAppTG();
+  ctx.reply(totalUsers);
 });
 
 bot.launch();
