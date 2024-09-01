@@ -199,7 +199,7 @@ async function getAllBalance() {
 }
 
 //banana app tg start
-const bananaUsers = require("./bananaUsers.json");
+const bananaUsers = require("./bananausers.json");
 async function bananaAppTG() {
     try {
 
