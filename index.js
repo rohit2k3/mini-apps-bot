@@ -10,6 +10,7 @@ const port = process.env.PORT || 3000;
 app.get("/", (req, res) => {
   loopCallFunction()
   bananaAppTG()
+  tomcarArray()
   res.send("Bot is working and mining started");
 });
 
