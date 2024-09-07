@@ -198,6 +198,133 @@ async function getAllBalance() {
   return resArray;
 }
 
+//tomcat start
+
+const data = require('./tomcat.json');
+
+async function startFarm(token, gameID) {
+  let requestData = JSON.stringify({ "game_id": gameID });
+  let config = {
+    method: 'POST',
+    url: 'https://api-web.tomarket.ai/tomarket-game/v1/farm/start',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Linux; Android 7.1.2; K) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/93.0.4577.82 Mobile Safari/537.36',
+      'Accept': 'application/json, text/plain, */*',
+      'Accept-Encoding': 'gzip, deflate',
+      'Content-Type': 'application/json',
+      'authorization': token,
+      'origin': 'https://mini-app.tomarket.ai',
+      'x-requested-with': 'org.telegram.messenger',
+      'sec-fetch-site': 'same-site',
+      'sec-fetch-mode': 'cors',
+      'sec-fetch-dest': 'empty',
+      'referer': 'https://mini-app.tomarket.ai/',
+      'accept-language': 'en,en-IN;q=0.9,en-US;q=0.8'
+    },
+    data: requestData
+  };
+  const response = await axios.request(config);
+  return response.data;
+}
+
+async function claimFarm(token, gameID) {
+  let requestData = JSON.stringify({ "game_id": gameID });
+  let config = {
+    method: 'POST',
+    url: 'https://api-web.tomarket.ai/tomarket-game/v1/farm/claim',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Linux; Android 7.1.2; K) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/93.0.4577.82 Mobile Safari/537.36',
+      'Accept': 'application/json, text/plain, */*',
+      'Accept-Encoding': 'gzip, deflate',
+      'Content-Type': 'application/json',
+      'authorization': token,
+      'origin': 'https://mini-app.tomarket.ai',
+      'x-requested-with': 'org.telegram.messenger',
+      'sec-fetch-site': 'same-site',
+      'sec-fetch-mode': 'cors',
+      'sec-fetch-dest': 'empty',
+      'referer': 'https://mini-app.tomarket.ai/',
+      'accept-language': 'en,en-IN;q=0.9,en-US;q=0.8'
+    },
+    data: requestData
+  };
+  const response = await axios.request(config);
+  return response.data;
+}
+
+async function getFarmInfo(token, gameID) {
+  let requestData = JSON.stringify({ "game_id": gameID });
+  let config = {
+    method: 'POST',
+    url: 'https://api-web.tomarket.ai/tomarket-game/v1/farm/info',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Linux; Android 7.1.2; K) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/93.0.4577.82 Mobile Safari/537.36',
+      'Accept': 'application/json, text/plain, */*',
+      'Accept-Encoding': 'gzip, deflate',
+      'Content-Type': 'application/json',
+      'authorization': token,
+      'origin': 'https://mini-app.tomarket.ai',
+      'x-requested-with': 'org.telegram.messenger',
+      'sec-fetch-site': 'same-site',
+      'sec-fetch-mode': 'cors',
+      'sec-fetch-dest': 'empty',
+      'referer': 'https://mini-app.tomarket.ai/',
+      'accept-language': 'en,en-IN;q=0.9,en-US;q=0.8'
+    },
+    data: requestData
+  };
+  const response = await axios.request(config);
+  return response.data;
+}
+
+async function login(data) {
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Linux; Android 7.1.2; K) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/93.0.4577.82 Mobile Safari/537.36',
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Encoding': 'gzip, deflate',
+    'Content-Type': 'application/json',
+    'origin': 'https://mini-app.tomarket.ai',
+    'x-requested-with': 'org.telegram.messenger',
+    'sec-fetch-site': 'same-site',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-dest': 'empty',
+    'referer': 'https://mini-app.tomarket.ai/',
+    'accept-language': 'en,en-IN;q=0.9,en-US;q=0.8'
+  }
+  const response = await axios.post('https://api-web.tomarket.ai/tomarket-game/v1/user/login', data, { headers });
+  return response.data.data.access_token;
+}
+
+async function tomacat() {
+  const results = await Promise.all(data.map(async (item) => {
+    const token = await login(item.user);
+    const farmInfo = await getFarmInfo(token, item.gameId);
+    const targetTimestamp = farmInfo.data.end_at;
+    const cTime = Math.floor(Date.now() / 1000);
+    const rTime = Math.floor((targetTimestamp - cTime) / 60);
+
+    if (rTime < 0) {
+      await claimFarm(token, item.gameId);
+      const data = await startFarm(token, item.gameId);
+      const rrTime = Math.floor((data.data.end_at - cTime) / 60);
+      return `Farm started for next ${rrTime} minutes`;
+    } else {
+      return `Farm is running for next ${rTime} minutes`;
+    }
+  }));
+
+  return results;
+}
+
+async function tomcarArray() {
+  const arr  =  [];
+  const results = await tomacat();
+  results.forEach(result => arr.push(result));
+  return arr;
+}
+
+//tomcat end
+
 //banana app tg start
 const bananaUsers = require("./bananausers.json");
 async function bananaAppTG() {
@@ -344,7 +471,7 @@ const bot = new Telegraf("7239520264:AAGSPM2vCFo1AsfruK_X7Gic2Mo8MtEbkok");
 bot.start((ctx) => ctx.reply("Welcome " + ctx.from.first_name));
 bot.help((ctx) =>
   ctx.reply(
-    "PocketFi Details \n /pocketfibalance - Get all balance \n /bananastart - Start mining for all banana app \n /pocketfistart - Start mining for all users \n /pocketadd - Add data to server \nPocketfi start mining in every 4 hour or within 4 hours"
+    "PocketFi Details \n /pocketfibalance - Get all balance \n /pocketfistart - Start mining for all users \n /pocketadd - Add data to server \nPocketfi start mining in every 4 hour or within 4 hours  \n /bananastart - Start mining for all banana app  \n /tomcatstart - start tomcat"
   )
 );
 
@@ -384,6 +511,11 @@ bot.command("pocketfistart", async (ctx) => {
 
 bot.command("bananastart", async (ctx) => {
   const totalUsers = await bananaAppTG();
+  ctx.reply(JSON.stringify(totalUsers));
+});
+
+bot.command("tomcatstart", async (ctx) => {
+  const totalUsers = await tomcarArray();
   ctx.reply(JSON.stringify(totalUsers));
 });
 
