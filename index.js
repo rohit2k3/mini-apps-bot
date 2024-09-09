@@ -340,6 +340,7 @@ async function bananaAppTG() {
             const headers = await loginMethod(user);
 
             let profile = await profileCall(headers);
+            
 
 
             if (profile && profile.data) {
@@ -355,6 +356,8 @@ async function bananaAppTG() {
                 if (profile.data.lottery_info && profile.data.lottery_info.countdown_end) {
                     const claimData = await claimBanana(headers);
                     profile = await profileCall(headers);
+                    console.log(claimData);
+                    
                 }
                 // if (profile.data.lottery_info && profile.data.lottery_info.remain_lottery_count > 0) {
                 //     const claimData = await harvestBanana(headers);
@@ -440,25 +443,18 @@ async function doClick(headers) {
 async function loginMethod(bodyData) {
     const url = "https://interface.carv.io/banana/login";
     let headers = {
-        "Reqable-Id": "",
-        "Host": "interface.carv.io",
-        "User-Agent": "Mozilla/5.0 (Linux; Android 7.1.2; K) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/93.0.4577.82 Mobile Safari/537.36",
-        "Connection": "keep-alive",
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Encoding": "gzip, deflate",
-        "Content-Type": "application/json",
-        "x-app-id": "carv",
-        "Authorization": "Bearer",
-        "Origin": "https://bananagame.xyz",
-        "X-Requested-With": "org.telegram.messenger",
-        "Sec-Fetch-Site": "cross-site",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Dest": "empty",
-        "Referer": "https://bananagame.xyz/",
-        "Accept-Language": "en,en-IN;q=0.9,en-US;q=0.8"
+      "x-app-id": "carv",
+      "origin": "https://banana.carv.io",
+      "x-requested-with": "org.telegram.messenger",
+      "sec-fetch-site": "same-site",
+      "sec-fetch-mode": "cors",
+      "sec-fetch-dest": "empty",
+      "referer": "https://banana.carv.io/",
+      "accept-language": "en,en-IN;q=0.9,en-US;q=0.8"
     };
 
     const response = await axios.post(url, bodyData, { headers });
+    
     headers.Authorization = `Bearer ${response.data.data.token}`;
 
     return headers;
@@ -512,6 +508,7 @@ bot.command("pocketfistart", async (ctx) => {
 
 bot.command("bananastart", async (ctx) => {
   const totalUsers = await bananaAppTG();
+  
   ctx.reply(JSON.stringify(totalUsers));
 });
 
